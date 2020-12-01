@@ -1,0 +1,286 @@
+﻿
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8"/>
+<meta name="description" content="" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />  
+
+ <!-- JQUERY -->
+<script src="https://code.nath.co/src/jQuery.min.js"></script>
+
+  <!-- FONTY -->
+<link rel="stylesheet" href="https://use.typekit.net/fsa0mwc.css">
+<title>Smart Desktop</title>
+
+<style>
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.light {
+    font-family: aileron, sans-serif;
+    font-weight: 300;
+    font-style: normal;
+}
+
+.semibold {
+    font-family: aileron, sans-serif;
+    font-weight: 600;
+    font-style: normal;
+}
+
+.main {
+    background: url(https://i.imgur.com/XRVwaBw.jpg); /*Zmente toto pro zmenu obrazku*/
+    background-size: cover;
+    background-position: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+.main-wrapper {
+    padding-bottom: 60px;
+    padding-top: 60px;
+    padding-left: 100px;
+    padding-right: 100px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.52);
+}
+
+.time {
+    display: flex;
+    background: white;
+    align-items: center;
+    color: black;
+    font-size: 159px;
+    width: 490px;
+    height: 167px;
+}
+
+.date {
+    margin-top: 20px;
+    font-size: 44px;
+    color: white;
+}
+
+.weather {
+    margin-top: 40px;
+    color: white;
+    font-size: 34px;
+}
+
+.weather-city, .humidity, .sunrise, .sunset {
+    font-size: 18px;
+}
+
+.weather-place {
+    font-size: 18px;
+}
+
+.humidity {
+    margin-top: 30px;
+}
+
+.news {
+    position: absolute;
+    bottom: 100px;
+}
+
+.news-headline {
+    font-size: 27px;
+    color: white;
+    text-decoration: none;
+}
+
+.news-date {
+    font-size: 14px;
+    color: white;
+}
+
+.rates {
+    position: absolute;
+    top: 80px;
+    right: 100px;
+}
+
+.rates-item {
+    color: white;
+    font-size: 40px;
+}
+
+
+</style>
+
+</head>
+<body> 
+<div class="main">
+    <div class="main-wrapper">
+        <div class="time semibold">
+            19:20
+        </div>
+        <div class="date light">
+            Dnes je pátek, 20.11.2020
+        </div>
+        <div class="weather semibold">
+            <span class="weather-temperature"></span><span class="weather-icon"></span>
+            <div class="weather-place light">
+            </div>
+            <div class="humidity light">
+                Vlhkost vzduchu: <span class="weather-humidity"></span>
+            </div>
+            <div class="sunrise light">
+                Východ slunce: <span class="weather-sunrise"></span>
+            </div>
+            <div class="sunset light">
+                Západ slunce: <span class="weather-sunset"></span>
+            </div>
+            <div class="weather-description light">
+            </div>
+        </div>
+        <div class="news light" id="news-wrapper">  
+            <div class="news-item">
+            </div>
+        </div>
+        <div class="rates">  
+            <div class="rates-item light" id="eur">
+                <span id="eurRate"></span>
+                <span class="currency semibold">EUR</span>
+            </div>
+            <div class="rates-item light" id="usd">
+                <span id="usdRate"></span>
+                <span class="currency semibold">USD</span>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="javascript/openweather.min.js"></script>
+<script src="javascript/money.min.js"></script>
+<script>
+        
+    $(function() {
+            $('.weather-temperature').openWeather({
+                key: 'VlOzTe_Klic_sem458', // Zde zadejte vas API klic
+                city: 'Trebic', // Zmente toto pro zmenu mesta
+                units: 'c',
+                lang: 'cz',
+                descriptionTarget: '.weather-description',
+                windSpeedTarget: '.weather-wind-speed',
+                minTemperatureTarget: '.weather-min-temperature',
+                maxTemperatureTarget: '.weather-max-temperature',
+                humidityTarget: '.weather-humidity',
+                sunriseTarget: '.weather-sunrise',
+                sunsetTarget: '.weather-sunset',
+                placeTarget: '.weather-place',
+                iconTarget: '.weather-icon',
+                success: function(data) {
+                    $('.weather').show();
+                    console.log(data);
+                },
+                error: function(data) {
+                    console.log(data.error);
+                }
+            });
+    });
+  
+</script>
+<script>
+
+    function DisplayTime() {
+        var date = new Date();
+        var time = $(".time");
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+        minutes = (minutes < 10) ? "0" + minutes : minutes;
+        time.html(hours + ":" + minutes);
+    }
+
+    function ConvertDay(dayNumber) {
+        switch(dayNumber)
+		{
+			case 1: return "pondělí"; 
+			case 2: return "úterý";
+			case 3: return "středa"; 
+			case 4: return "čtvrtek";
+			case 5: return "pátek"; 
+			case 6: return "sobota";
+			case 0: return "neděle"; 
+			default: return "undefined";
+		}
+    }
+
+    function DisplayDate() {
+        var date = new Date();
+        $(".date").html("Dnes je " + ConvertDay(date.getDay()) + ", " + date.getDate() + "." + (date.getMonth() + 1) + ". " + date.getFullYear());
+    }
+
+    function DisplayNews() {
+             $(".news-item").remove();
+            const RSS_URL = `https://www.novinky.cz/rss`;
+
+            $.ajax(RSS_URL, {
+                accepts: {
+                    xml: "application/rss+xml"
+                },
+
+                dataType: "xml",
+
+                success: function (data) {  
+                    var newsCount = 0;                 
+                    $(data)
+                        .find("item")
+                        .each(function () {
+                            newsCount++; 
+                            if (newsCount <= 5) { 
+                                const el = $(this);
+                                const template = `
+                                <div class="news-item">
+                                    <div class="news-headline">
+                                        ${el.find("title").text()}
+                                    </div>
+                                    <div class="news-date">
+                                        ${el.find("pubDate").text()}
+                                    </div>
+                                </div>
+                                `;
+
+                                document.getElementById("news-wrapper").insertAdjacentHTML("afterBegin", template);
+                            }                    
+                        });
+                }
+            });
+    
+
+    }
+
+    function GetExchangeRates() {
+        let getRates = () => {
+            let usdRate = fx(1).from("USD").to("CZK");
+            $("#usdRate").text(usdRate.toFixed(2));
+            let eurRate = fx(1).to("CZK"); //base = eur
+            $("#eurRate").text(eurRate.toFixed(2));
+        }  
+        fetch('https://api.exchangeratesapi.io/latest')
+            .then((resp) => resp.json())
+            .then((data) => fx.rates = data.rates)
+            .then(getRates)
+
+    }
+
+    
+    DisplayTime();
+    DisplayDate();
+    DisplayNews();
+    GetExchangeRates();
+    //SetWeather();
+    setInterval(DisplayTime, 1000);
+    setInterval(DisplayDate, 60000);
+    setInterval(DisplayNews, 60000);
+    setInterval(GetExchangeRates, 60000);
+    //setInterval(SetWeather, 60000);
+</script>
+</html>
